@@ -44,9 +44,9 @@ elif [ $# != 2 ]; then
 fi
 
 APPSBASE="$1"
-LOCALROOT=$PWD
+LOCALROOT="$PWD"
 
-APPSDIR=$LOCALROOT/$APPSBASE
+APPSDIR="$LOCALROOT/$APPSBASE"
 MOUNT=/home
 
 # Assure we're running in /home or /Users
@@ -79,18 +79,18 @@ mygid=`id -g`
 
 # Copy the boilerplate apps directory into this development directory where it can be
 # worked on easily.
-if [ ! -d $APPSDIR ]; then
+if [ ! -d "$APPSDIR" ]; then
     echo ""
     echo Extracting /apps default directory into $APPSDIR ...
-    mkdir $APPSDIR
+    mkdir "$APPSDIR"
     SELINUX_FLAG=$(sestatus 2>/dev/null | fgrep -q enabled && echo :z)
-    $DOCKER_CMD run -i --rm=true -v $APPSDIR:/appsdir$SELINUX_FLAG $IMAGE \
+    $DOCKER_CMD run -i --rm=true -v "$APPSDIR:/appsdir$SELINUX_FLAG $IMAGE" \
        --user root --config /apps/chaperone.d --task clone-apps /appsdir $myuid:$mygid
     echo "You can customize the contents of $APPSDIR to tailor it for your application,"
     echo "then use it as a template for your production image."
     echo ""
-    if [ -x $APPSDIR/bin/chaplocal ]; then
-       THEIRVER=`$APPSDIR/bin/chaplocal -V`
+    if [ -x "$APPSDIR/bin/chaplocal" ]; then
+       THEIRVER="`$APPSDIR/bin/chaplocal -V`"
        if [ "$THEIRVER" != "$VERSTR" ]; then
 	   echo "WARNING: This image uses a different version of chaplocal."
 	   echo "         Ours:   $VERSTR"
@@ -100,7 +100,7 @@ if [ ! -d $APPSDIR ]; then
     fi
     echo Executing run.sh within $APPSDIR ...
     echo ""
-elif [ ! -f $APPSDIR/run.sh ]; then
+elif [ ! -f "$APPSDIR/run.sh" ]; then
     echo "$APPSDIR already exists but doesn't seem to be one I created (no run.sh in there)"
     echo "You're on your own"
     exit 1
@@ -111,4 +111,4 @@ else
     echo ""
 fi
 
-$APPSDIR/run.sh $runopts
+"$APPSDIR/run.sh" $runopts
