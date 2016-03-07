@@ -30,7 +30,11 @@ if [ $# == 1 ]; then
 elif [ $# != 2 ]; then
    echo ""
    echo "Usage: chaplocal [-d] local-apps-dir [image-name]"
+   echo "       chaplocal -V"
    echo ""
+   echo "-d  passed through to docker - run in the background"
+   echo "-V  report chaplocal version and exit"
+   echo
    echo "Runs the specified chaperone image and uses local-apps-dir for the apps"
    echo "directory.  Creates a script in local-apps-dir called run.sh so you can"
    echo "run an interactive (default) or daemon instance."
