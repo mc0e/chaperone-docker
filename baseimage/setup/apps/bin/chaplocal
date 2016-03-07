@@ -12,44 +12,50 @@ if [ "$CHAP_SERVICE_NAME" != "" ]; then
    exit 1
 fi
 
-if [ "$1" == '-V' ]; then
-   echo $VERSTR
-   exit
-fi
+usage() {
+   >$2 echo "" .
+   >$2 echo "Usage: chaplocal [-d] local-apps-dir [image-name]" .
+   >$2 echo "       chaplocal -V" .
+   >$2 echo ""
+   >$2 echo "-d  passed through to docker - run in the background"
+   >$2 echo "-V  report chaplocal version and exit"
+   >$2 echo "".
+   >$2 echo "Runs the specified chaperone image and uses local-apps-dir for the apps"
+   >$2 echo "directory.  Creates a script in local-apps-dir called run.sh so you can"
+   >$2 echo "run an interactive (default) or daemon instance."
+   >$2 echo ""
+   >$2 echo "Will run all container processes under the current user account with the"
+   >$2 echo "local drive mounted as a shared volume in the container."
+   >$2 echo ""
+   >$2 echo "If not specified, then the image '$DEFAULT_IMAGE' will be used."
+   >$2 echo ""
+   exit 1
+}
 
-if [ "$1" == '-d' ]; then
-   runopts="-d"
-   shift
-else
-   runopts=""
+while getopts "Vd" opt; do
+  case $opt in
+    d)
+      runopts="-d"
+      ;;
+    V)
+      echo $VERSTR
+      exit
+      ;;
+    ?)
+      usage
+      ;;
+done
 fi
+# default `runopts` to empty string for clarity, though it doesn't really matter if it's unset.
+runopts="${runopts:-}"
 
-IMAGE="$2"
-if [ $# == 1 ]; then
-   IMAGE=$DEFAULT_IMAGE
-elif [ $# != 2 ]; then
-   echo ""
-   echo "Usage: chaplocal [-d] local-apps-dir [image-name]"
-   echo "       chaplocal -V"
-   echo ""
-   echo "-d  passed through to docker - run in the background"
-   echo "-V  report chaplocal version and exit"
-   echo
-   echo "Runs the specified chaperone image and uses local-apps-dir for the apps"
-   echo "directory.  Creates a script in local-apps-dir called run.sh so you can"
-   echo "run an interactive (default) or daemon instance."
-   echo ""
-   echo "Will run all container processes under the current user account with the"
-   echo "local drive mounted as a shared volume in the container."
-   echo ""
-   echo "If not specified, then the image '$DEFAULT_IMAGE' will be used."
-   echo ""
-   exit
+if [[ $# < 1 || $# > 2 ]]; then
+  usage
 fi
 
 APPSBASE="$1"
+IMAGE=${2:-$DEFAULT_IMAGE}
 LOCALROOT="$PWD"
-
 APPSDIR="$LOCALROOT/$APPSBASE"
 MOUNT=/home
 
@@ -69,11 +75,11 @@ fi
 DOCKER_CMD=$(docker version >/dev/null 2>&1 && echo docker || echo 'sudo docker')
 
 if [ "`$DOCKER_CMD inspect $IMAGE >/dev/null 2>&1 && echo yes`" != "yes" ]; then
-  echo ""
-  echo Cannot find local docker image: $IMAGE
-  echo ""
-  echo You may want to pull the image with \"$DOCKER_CMD pull $IMAGE\" 
-  echo and then try again.
+  >2 echo ""
+  >2 echo Cannot find local docker image: $IMAGE
+  >2 echo ""
+  >2 echo You may want to pull the image with \"$DOCKER_CMD pull $IMAGE\" 
+  >2 echo and then try again.
   exit 1
 fi
 
@@ -105,8 +111,8 @@ if [ ! -d "$APPSDIR" ]; then
     echo Executing run.sh within $APPSDIR ...
     echo ""
 elif [ ! -f "$APPSDIR/run.sh" ]; then
-    echo "$APPSDIR already exists but doesn't seem to be one I created (no run.sh in there)"
-    echo "You're on your own"
+    >2 echo "$APPSDIR already exists but doesn't seem to be one I created (no run.sh in there)"
+    >2 echo "You're on your own"
     exit 1
 else
     echo ""
